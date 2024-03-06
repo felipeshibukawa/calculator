@@ -65,7 +65,7 @@ main {
     grid-column: span 4;
     width: 400px;
     padding: 5px;
-    font-size: 80px;
+    font-size: 4rem;
 }
 
 #previousDisplay {
@@ -74,7 +74,6 @@ main {
     align-items: flex-end;
     grid-column: 1 / span 4;
     grid-row: 1;
-    /* background-color: aqua; */
     padding-right: 2rem;
     font-size: 30px;
     color: gray;
@@ -87,4 +86,44 @@ footer {
 
 a { 
     text-decoration: none;
+}
+
+@media screen and (max-width: 600px) {
+    main {
+        padding-top: 5rem;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        flex-grow: 1;
+        overflow: hidden;
+    }
+    
+    #calculator {
+        width: 300px;
+        height: 400px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: 2rem 1fr 1fr 1fr 1fr 1fr; 
+        gap: 10px;
+    }
+
+    #display {  
+        width: 300px;
+        font-size: 3rem;
+        padding-bottom: 1rem;
+    }
+    
+    #previousDisplay {
+        font-size: 20px;
+    }
+
+    .button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 60px;
+        width: 60px;
+        font-size: x-large;
+    }
 }
