@@ -7,7 +7,7 @@ const elementList = [
 
 // Variables
 let firstNumber = null;
-let operator;
+let operator = null;
 let oldOperator;
 let lastNumber = null;
 let oldLastNumber;
@@ -16,7 +16,6 @@ let oldAcummulator = null;
 let result;
 let equalClicked = false;
 let useAccumulator = false;
-let isDecimal = false;
 
 // UI Functions
 function createNode(options) {
@@ -76,7 +75,7 @@ function getNumberOrDot(n) {
     if (n !== '.') {
         if (!firstNumber) {
             firstNumber = n;
-        } else if (firstNumber && !operator) {
+        } else if (firstNumber && !operator && !oldOperator) {
             firstNumber = firstNumber + n;
         } else if (operator && !lastNumber) {
             lastNumber = n;
@@ -103,10 +102,33 @@ function getNumberOrDot(n) {
 function operate() {
     let parsedFirstNumber = parseFloat(firstNumber);
     let parsedlastNumber = parseFloat(lastNumber);
+    let parsedOldLastNumber = parseFloat(oldLastNumber);
     oldAcummulator = accumulator;
 
-    if (accumulator != null) {
-        console.log('entrou no primeiro if do operate')
+    if (equalClicked) {
+        switch (oldOperator) {
+            case '+':
+                result = add(accumulator, parsedOldLastNumber);
+                accumulator = result;
+                break;
+            case '-':
+                result = subtract(accumulator, parsedOldLastNumber);
+                accumulator = result;
+                break;
+            case 'x':
+                result = multiply(accumulator, parsedOldLastNumber);
+                accumulator = result;
+                break;
+            case '÷':
+                result = divide(accumulator, parsedOldLastNumber);
+                accumulator = result;
+                break;
+            case '%':
+                result = percent(accumulator, parsedOldLastNumber);
+                accumulator = result;
+                break;
+        }
+    } else if (accumulator != null) {
         switch (operator) {
             case '+':
                 result = add(accumulator, parsedlastNumber);
@@ -153,10 +175,10 @@ function operate() {
                 break;
         }
     }
-
-    oldLastNumber = lastNumber;
+    oldLastNumber = lastNumber ? lastNumber : oldLastNumber;
     lastNumber = null;
-    oldOperator = operator;
+    oldOperator = operator ? operator : oldOperator;
+    operator = null;
 }
 
 function updateDisplay() {
@@ -166,14 +188,14 @@ function updateDisplay() {
     if (operator && !firstNumber) {
         alert("Please pick a number first.");
         operator = null;
-    } else if (!operator) {
+    } else if (!operator && !oldOperator) {
         display.textContent = firstNumber || '0';
         previousDisplay.textContent = '';
     } else if (!lastNumber && !oldLastNumber) {
         display.textContent = firstNumber + " " + operator;
     } else if (!accumulator && !oldLastNumber) { 
         display.textContent = firstNumber + " " + operator + " " + lastNumber;
-    } else if (equalClicked === true && !useAccumulator) {
+    } else if (!useAccumulator) {
         display.textContent = result;
         previousDisplay.textContent = firstNumber + " " + (oldOperator ? oldOperator : operator)  + " " + oldLastNumber + " =";
         useAccumulator = true;
@@ -181,7 +203,7 @@ function updateDisplay() {
         display.textContent = 0;
         previousDisplay.textContent = (oldAcummulator ? oldAcummulator : firstNumber) + " " + (oldOperator ? oldOperator : operator ) + " " + oldLastNumber + " =";
     } else {
-        display.textContent = accumulator + (lastNumber ? " " + operator + " " + lastNumber : '');
+        display.textContent = accumulator + (operator ? " " + operator : '') + (lastNumber ? " " + lastNumber : '');
         previousDisplay.textContent = (oldAcummulator ? oldAcummulator : firstNumber) + " " + (oldOperator ? oldOperator : operator ) + " " + oldLastNumber + " =";
     }
 }
@@ -197,7 +219,6 @@ function clear() {
     result = 0;
     equalClicked = false;
     useAccumulator = false;
-    isDecimal = false;
 }
 
 function reverseSign() {
@@ -229,14 +250,16 @@ function reverseSign() {
 
 function backspace() {
     if (!firstNumber) {
-    } else if (firstNumber && !operator) {
+    } else if (firstNumber && !operator && !useAccumulator) {
         firstNumber = firstNumber.substring(0, firstNumber.length - 1);
-    } else if (operator && !lastNumber && !equalClicked) {
+    } else if (operator && !lastNumber && !useAccumulator) {
         operator = null;
     } else if (operator && lastNumber) {
         lastNumber = lastNumber.substring(0, lastNumber.length - 1);
     } else {
-        if (accumulator < 10) {
+        if (accumulator === 0) {
+            clear()
+        } else if (accumulator < 10) {
             accumulator = 0;
         } else {
             accumulator = Math.floor(accumulator / 10);
@@ -244,7 +267,7 @@ function backspace() {
     }
 }
 
-// EventListener
+// EventListeners
 document.addEventListener('DOMContentLoaded', () => {
     createAndAppendNodes(elementList);
     createAndAppendButton(buttonList);
@@ -256,12 +279,9 @@ document.addEventListener('DOMContentLoaded', () => {
             switch (buttonId) {
                 case 'AC':
                     clear();
-                    updateDisplay();
                     break;
                 case '=':
                     operate();
-                    equalClicked = true;
-                    updateDisplay();
                     break;
                 case '-':
                 case '+':
@@ -269,23 +289,75 @@ document.addEventListener('DOMContentLoaded', () => {
                 case '÷':
                 case '%':
                     operator = buttonId;
-                    updateDisplay();
                     break;
                 case '←':
                     backspace();
-                    updateDisplay();
                     break;
                 case '+/-':
-                    reverseSign()
-                    updateDisplay()
+                    reverseSign();
                     break;
                 default:
                     getNumberOrDot(buttonId);
-                    updateDisplay()
+                    break;
             }
+            equalClicked = buttonId === '=';
+            updateDisplay();
         });
     });
+
+    document.addEventListener('keydown', function(event) {
+        const key = event.key;
+        switch (key) {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            case '.':
+                getNumberOrDot(key);
+                break;
+            case ',':
+                getNumberOrDot('.');
+                break;
+            case '+':
+            case '-':
+            case '%':
+                operator = key;
+                break;
+            case '/':
+                operator = '÷';
+                break;
+            case '*':
+                operator = 'x';
+                break;
+            case 'c':
+                clear();
+                break;
+            case 'Backspace':
+                backspace();
+                break;
+            case 'Enter':
+            case '\r':
+            case '\n':
+            case '=':
+                if (document.activeElement.id === "=" || document.activeElement.id === "AC") {
+                    event.preventDefault();
+                    // Removes focus from the '=' button to prevent double-clicking after it has been clicked with the mouse.
+                    document.activeElement.blur();
+                }
+                operate();
+                break;
+        }
+        equalClicked = key === '=' || key === 'Enter';
+        updateDisplay();
+    });      
 });
+
 
 // Arithmetic Operations
 function add(a, b) {
